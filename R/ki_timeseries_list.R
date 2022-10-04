@@ -21,7 +21,7 @@
 #'}
 #'
 
-ki_timeseries_list <- function(hub, station_id, ts_name, coverage = TRUE, group_id, 
+ki_timeseries_list <- function(hub, station_id, ts_name, coverage = TRUE, group_id,
                                return_fields, datasource = 0) {
   # Check for no input
   if (missing(station_id) & missing(ts_name) & missing(group_id)) {

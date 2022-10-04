@@ -10,7 +10,10 @@
 #' with the following format: (min_x, min_y, max_x, max_y).
 #' @param return_fields (Optional) Specific fields to return. Consult your KiWIS hub services documentation for available options.
 #' Should be a comma separate string or a vector.
+#' @param ca_sta_return_fields (Optional) Selects a set of custom defined station attributes (returnfield 'ca_sta' must be active, allows comma separated list)
+#' Should be a comma separate string or a vector.
 #' @param datasource (Optional) The data source to be used, defaults to 0.
+#' @param timeout (Optional) Timeout in seconds, defaults to 45.
 #' @return Tibble containing station metadata.
 #' @examples
 #' \dontrun{
@@ -20,8 +23,8 @@
 #' ki_station_list(hub = "swmc", group_id = "518247")
 #' }
 #'
-ki_station_list <- function(hub, search_term, bounding_box, group_id, 
-                            return_fields, datasource = 0) {
+ki_station_list <- function(hub, search_term, bounding_box, group_id,
+                            return_fields, ca_sta_return_fields, datasource = 0, timeout = 45) {
   # Common strings for culling bogus stations
   garbage <- c(
     "^#", "^--", "testing",
@@ -40,6 +43,16 @@ ki_station_list <- function(hub, search_term, bounding_box, group_id,
     }
   }
 
+  if (missing(ca_sta_return_fields)) {
+    ca_sta_return_fields <- ""
+  } else {
+    if (!inherits(ca_sta_return_fields, "character")) {
+      stop(
+        "User supplied ca_sta_return_fields must be comma separated string or vector of strings"
+      )
+    }
+  }
+
   # Identify hub
   api_url <- check_hub(hub)
 
@@ -54,15 +67,19 @@ ki_station_list <- function(hub, search_term, bounding_box, group_id,
     returnfields = paste(
       return_fields,
       collapse = ","
+    ),
+    ca_sta_returnfields = paste(
+      ca_sta_return_fields,
+      collapse = ","
     )
   )
 
   # Check for search term
   if (!missing(search_term)) {
     search_term <- paste(search_term,
-      toupper(search_term),
-      tolower(search_term),
-      sep = ","
+                         toupper(search_term),
+                         tolower(search_term),
+                         sep = ","
     )
     api_query[["station_name"]] <- search_term
   }
@@ -84,7 +101,7 @@ ki_station_list <- function(hub, search_term, bounding_box, group_id,
       httr::GET(
         url = api_url,
         query = api_query,
-        httr::timeout(15)
+        httr::timeout(timeout)
       )
     },
     error = function(e) {
