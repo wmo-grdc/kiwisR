@@ -6,18 +6,20 @@
 \usage{
 ki_station_list(
   hub,
-  search_term,
+  station_name,
   bounding_box,
   group_id,
   return_fields,
-  datasource = 0
+  ca_sta_return_fields,
+  datasource = 0,
+  timeout = 45
 )
 }
 \arguments{
 \item{hub}{The KiWIS database you are querying. Either one of the defaults or a URL.
 See \href{https://github.com/rywhale/kiwisR}{README}.}
 
-\item{search_term}{(Optional) A station name to search for. Supports the use of * as a wildcard. Case doesn't matter.}
+\item{station_name}{(Optional) A station name to search for. Supports the use of * as a wildcard. Case doesn't matter.}
 
 \item{bounding_box}{(Optional) A bounding box to search within for stations. Should be a vector or comma separated string.}
 
@@ -27,7 +29,12 @@ with the following format: (min_x, min_y, max_x, max_y).}
 \item{return_fields}{(Optional) Specific fields to return. Consult your KiWIS hub services documentation for available options.
 Should be a comma separate string or a vector.}
 
+\item{ca_sta_return_fields}{(Optional) Selects a set of custom defined station attributes (returnfield 'ca_sta' must be active, allows comma separated list)
+Should be a comma separate string or a vector.}
+
 \item{datasource}{(Optional) The data source to be used, defaults to 0.}
+
+\item{timeout}{(Optional) Timeout in seconds, defaults to 45.}
 }
 \value{
 Tibble containing station metadata.
@@ -38,7 +45,7 @@ Returns all available stations by default and allows for search terms and other 
 \examples{
 \dontrun{
 ki_station_list(hub = "swmc")
-ki_station_list(hub = "swmc", search_term = "A*")
+ki_station_list(hub = "swmc", station_name = "A*")
 ki_station_list(hub = "swmc", bounding_box = "-131.7,-5.4,135.8,75.8")
 ki_station_list(hub = "swmc", group_id = "518247")
 }

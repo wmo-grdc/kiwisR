@@ -4,11 +4,13 @@
 \alias{ki_group_list}
 \title{Get list of available groups}
 \usage{
-ki_group_list(hub, datasource = 0)
+ki_group_list(hub, return_fields, datasource = 0)
 }
 \arguments{
 \item{hub}{The KiWIS database you are querying. Either one of the defaults or a URL.
 See \href{https://github.com/rywhale/kiwisR}{README}.}
+
+\item{return_fields}{(Optional) KiWIS return fields as a list.}
 
 \item{datasource}{(Optional) The data source to be used, defaults to 0.}
 }

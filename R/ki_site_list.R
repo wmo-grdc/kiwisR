@@ -1,25 +1,25 @@
-#' Get list of available groups
+#' Get list of available sites
 #'
 #' @export
-#' @description Returns a tibble containing metadata available groups. This can be used to
-#' further filter down other queries like `ki_station_list`.
+#' @description Returns a tibble containing metadata available catchments.
 #' @param hub The KiWIS database you are querying. Either one of the defaults or a URL.
 #'  See \href{https://github.com/rywhale/kiwisR}{README}.
 #' @param return_fields (Optional) KiWIS return fields as a list.
 #' @param datasource (Optional) The data source to be used, defaults to 0.
-#' @return A tibble with three columns: group_id, group_name and group_type.
+#' @return A tibble
 #' @examples
 #' \dontrun{
-#' ki_group_list(hub = 'swmc')
+#' ki_site_list(hub = 'swmc')
 #' }
 #'
 
-ki_group_list <- function(hub, return_fields, datasource = 0) {
+ki_site_list <- function(hub, return_fields, datasource = 0) {
 
 
   # Account for user-provided return fields
   if (missing(return_fields)) {
-    return_fields <- "group_name, group_id, group_type, group_remark, group_purpose, group_private"
+    return_fields <- "site_no, site_id, site_uuid, site_name, site_longname, site_latitude, site_longitude, site_carteasting, site_cartnorthing,
+    site_type_name, site_type_shortname, parametertype_id, parametertype_name, stationparameter_name, site_georefsystem, site_area_wkt, site_area_wkt_org"
   } else {
     if (!inherits(return_fields, "character")) {
       stop(
@@ -36,7 +36,7 @@ ki_group_list <- function(hub, return_fields, datasource = 0) {
     service = "kisters",
     datasource = datasource,
     type = "queryServices",
-    request = "getGroupList",
+    request = "getSiteList",
     format = "json",
     kvp = "true",
     returnfields = paste(
