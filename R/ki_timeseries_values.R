@@ -8,6 +8,7 @@
 #'  Time series ids can be found using the `ki_timeseries_list` function.
 #' @param start_date A date string formatted "YYYY-MM-DD". Defaults to yesterday.
 #' @param end_date A date string formatted "YYYY-MM-DD". Defaults to today.
+#' @param complete boolean, set to TRUE to retrieve complete coverage (ignores start_date od end_date)
 #' @param return_fields (Optional) Specific fields to return. Consult your KiWIS hub services documentation for available options.
 #' Should be a comma separate string or a vector.
 #' @param datasource (Optional) The data source to be used, defaults to 0.
@@ -22,19 +23,22 @@
 #' )
 #' }
 #'
-ki_timeseries_values <- function(hub, ts_id, start_date, end_date, 
+ki_timeseries_values <- function(hub, ts_id, start_date, end_date, complete,
                                  return_fields, datasource = 0) {
 
-  # Default to past 24 hours
-  if (missing(start_date) || missing(end_date)) {
+
+
+  if ((missing(complete) || complete == FALSE)) {
+    if (missing(start_date) || missing(end_date)) {
     message("No start or end date provided, trying to return data for past 24 hours")
     start_date <- Sys.Date() - 1
     end_date <- Sys.Date()
-  } else {
-    check_date(start_date, end_date)
+    } else {
+      check_date(start_date, end_date)
+    }
   }
 
-  # Account for user-provided return fields
+    # Account for user-provided return fields
   if (missing(return_fields)) {
     return_fields <- "Timestamp,Value"
   } else {
@@ -77,8 +81,6 @@ ki_timeseries_values <- function(hub, ts_id, start_date, end_date,
     format = "json",
     kvp = "true",
     ts_id = ts_id_string,
-    from = start_date,
-    to = end_date,
     metadata = "true",
     md_returnfields = ts_meta,
     returnfields = paste(
@@ -86,6 +88,18 @@ ki_timeseries_values <- function(hub, ts_id, start_date, end_date,
       collapse = ","
     )
   )
+
+  if (missing(complete) || complete == FALSE) {
+    api_query <- c(api_query,
+                   from = start_date,
+                   to = end_date
+                   )
+  } else {
+    api_query <- c(api_query,
+                   period = "complete"
+                   )
+  }
+
 
   # Send request
   raw <- tryCatch({
@@ -112,34 +126,44 @@ ki_timeseries_values <- function(hub, ts_id, start_date, end_date,
   if ("rows" %in% names(json_content)) {
     num_rows <- sum(as.numeric(json_content$rows))
     if (num_rows == 0) {
-      stop("No data available for selected ts_id(s).")
+      warning("No data available for selected ts_id(s).")
+      content_dat <- tibble::data_frame(
+        Timestamp = character(),
+        Value = numeric(),
+        ts_name = character(),
+        ts_id = character(),
+        Units = character(),
+        station_name = character(),
+        station_id = character()
+      )
+    } else {
+
+
+    ts_cols <- unlist(strsplit(json_content$columns[[1]], ","))
+
+    content_dat <- purrr::map_df(
+      1:length(json_content$data),
+      function(ts_chunk) {
+        ts_data <- tibble::as_tibble(
+          json_content$data[[ts_chunk]],
+          .name_repair = "minimal",
+        )
+
+        names(ts_data) <- ts_cols
+
+        dplyr::mutate(
+          ts_data,
+          Timestamp = lubridate::ymd_hms(ts_data$Timestamp),
+          Value = as.numeric(ts_data$Value),
+          ts_name = json_content$ts_name[[ts_chunk]],
+          ts_id = json_content$ts_id[[ts_chunk]],
+          Units = json_content$ts_unitsymbol[[ts_chunk]],
+          station_name = json_content$station_name[[ts_chunk]],
+          station_id = json_content$station_id[[ts_chunk]]
+        )
+      }
+    )
     }
   }
-
-  ts_cols <- unlist(strsplit(json_content$columns[[1]], ","))
-
-  content_dat <- purrr::map_df(
-    1:length(json_content$data),
-    function(ts_chunk) {
-      ts_data <- tibble::as_tibble(
-        json_content$data[[ts_chunk]],
-        .name_repair = "minimal",
-      )
-
-      names(ts_data) <- ts_cols
-
-      dplyr::mutate(
-        ts_data,
-        Timestamp = lubridate::ymd_hms(ts_data$Timestamp),
-        Value = as.numeric(ts_data$Value),
-        ts_name = json_content$ts_name[[ts_chunk]],
-        ts_id = json_content$ts_id[[ts_chunk]],
-        Units = json_content$ts_unitsymbol[[ts_chunk]],
-        station_name = json_content$station_name[[ts_chunk]],
-        station_id = json_content$station_id[[ts_chunk]]
-      )
-    }
-  )
-
   return(content_dat)
 }

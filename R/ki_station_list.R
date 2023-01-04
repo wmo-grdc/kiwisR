@@ -7,7 +7,6 @@
 #' @param station_name (Optional) A station name to search for. Supports the use of * as a wildcard. Case doesn't matter.
 #' @param bounding_box (Optional) A bounding box to search within for stations. Should be a vector or comma separated string.
 #' @param group_id (Optional) A station group id (see ki_group_list).
-#' with the following format: (min_x, min_y, max_x, max_y).
 #' @param return_fields (Optional) Specific fields to return. Consult your KiWIS hub services documentation for available options.
 #' Should be a comma separate string or a vector.
 #' @param ca_sta_return_fields (Optional) Selects a set of custom defined station attributes (returnfield 'ca_sta' must be active, allows comma separated list)

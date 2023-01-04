@@ -12,6 +12,8 @@
 #' @param group_id (Optional) A time series group id (see ki_group_list).
 #' @param return_fields (Optional) Specific fields to return. Consult your KiWIS hub services documentation for available options.
 #' Should be a comma separate string or a vector.
+#' @param ca_sta_return_fields (Optional) Selects a set of custom defined station attributes (returnfield 'ca_sta' must be active, allows comma separated list)
+#' Should be a comma separate string or a vector.
 #' @param datasource (Optional) The data source to be used, defaults to 0.
 #' @return A tibble containing all available time series for selected stations.
 #' @examples
@@ -22,7 +24,7 @@
 #'
 
 ki_timeseries_list <- function(hub, station_id, ts_name, coverage = TRUE, group_id,
-                               return_fields, datasource = 0) {
+                               return_fields, ca_sta_return_fields, datasource = 0) {
   # Check for no input
   if (missing(station_id) & missing(ts_name) & missing(group_id)) {
     stop("No station_id, ts_name or group_id provided.")
@@ -37,6 +39,16 @@ ki_timeseries_list <- function(hub, station_id, ts_name, coverage = TRUE, group_
       stop(
         "User supplied return_fields must be comma separated string or vector of strings"
       )
+    }
+
+    if (missing(ca_sta_return_fields)) {
+      ca_sta_return_fields <- ""
+    } else {
+      if (!inherits(ca_sta_return_fields, "character")) {
+        stop(
+          "User supplied ca_sta_return_fields must be comma separated string or vector of strings"
+        )
+      }
     }
 
     # Account for user listing coverage in return_fields
@@ -62,7 +74,11 @@ ki_timeseries_list <- function(hub, station_id, ts_name, coverage = TRUE, group_
     returnfields = paste(
       return_fields,
       collapse = ","
-      )
+      ),
+    ca_sta_returnfields = paste(
+      ca_sta_return_fields,
+      collapse = ","
+    )
     )
 
   if (!missing(station_id)) {
